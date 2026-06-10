@@ -1,5 +1,9 @@
 'use strict';
 
+// ── Auth guard ────────────────────────────────────────────────────────────────
+const currentUser = JSON.parse(localStorage.getItem('tm_user') || 'null');
+if (!currentUser) window.location.href = 'login.html';
+
 // ── State ─────────────────────────────────────────────────────────────────────
 const STORAGE_KEY = 'taskmaster_tasks';
 let tasks  = load();
@@ -43,6 +47,15 @@ themeBtn.addEventListener('click', () => {
   html.setAttribute('data-theme', next);
   localStorage.setItem('tm_theme', next);
   themeBtn.textContent = next === 'dark' ? '🌙' : '☀️';
+});
+
+// ── User greeting & logout ────────────────────────────────────────────────────
+const greetingEl = document.getElementById('userGreeting');
+if (greetingEl && currentUser) greetingEl.textContent = `👋 ${currentUser.name.split(' ')[0]}`;
+
+document.getElementById('logoutBtn')?.addEventListener('click', () => {
+  localStorage.removeItem('tm_user');
+  window.location.href = 'login.html';
 });
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
