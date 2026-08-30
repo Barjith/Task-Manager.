@@ -62,21 +62,6 @@ window.onload = function() {
     userGreeting.textContent = currentUser.name.split(' ')[0];
   }
   
-  // Theme toggle
-  if (themeBtn) {
-    const savedTheme = localStorage.getItem('tm_theme') || 'light';
-    document.documentElement.setAttribute('data-theme', savedTheme);
-    themeBtn.innerHTML = savedTheme === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-    
-    themeBtn.onclick = function() {
-      const current = document.documentElement.getAttribute('data-theme');
-      const next = current === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', next);
-      localStorage.setItem('tm_theme', next);
-      themeBtn.innerHTML = next === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-    };
-  }
-  
   // Logout
   if (logoutBtn) {
     logoutBtn.onclick = function() {
@@ -235,6 +220,8 @@ window.onload = function() {
       const title = taskInput.value.trim();
       if (!title) return;
       
+      const taskTimeInput = document.getElementById('taskTime');
+      
       const task = {
         id: Date.now().toString(),
         title: title,
@@ -242,6 +229,7 @@ window.onload = function() {
         priority: taskPriority.value,
         category: taskCategory.value,
         due: taskDue.value || null,
+        time: taskTimeInput ? taskTimeInput.value : null,
         done: false,
         createdAt: Date.now()
       };
@@ -254,6 +242,7 @@ window.onload = function() {
       taskInput.value = '';
       taskNote.value = '';
       taskDue.value = '';
+      if (taskTimeInput) taskTimeInput.value = '';
       
       render();
       console.log('Task added!');
@@ -339,12 +328,14 @@ window.onload = function() {
     const editPriority = document.getElementById('editPriority');
     const editCategory = document.getElementById('editCategory');
     const editDue = document.getElementById('editDue');
+    const editTime = document.getElementById('editTime');
     
     if (editInput) editInput.value = task.title;
     if (editNote) editNote.value = task.note || '';
     if (editPriority) editPriority.value = task.priority;
     if (editCategory) editCategory.value = task.category;
     if (editDue) editDue.value = task.due || '';
+    if (editTime) editTime.value = task.time || '';
     
     if (modalBackdrop) modalBackdrop.hidden = false;
   }
@@ -369,6 +360,7 @@ window.onload = function() {
       task.priority = document.getElementById('editPriority').value;
       task.category = document.getElementById('editCategory').value;
       task.due = document.getElementById('editDue').value || null;
+      task.time = document.getElementById('editTime').value || null;
       
       saveTasks(tasks);
       render();
@@ -394,3 +386,291 @@ window.onload = function() {
   
   console.log('APP.JS: Initialization complete!');
 };
+
+
+// ══════════════════════════════════════════════════════════════════════════
+// NOTIFICATION SYSTEM
+// ══════════════════════════════════════════════════════════════════════════
+
+function initNotificationSystem() {
+  const notificationBtn = document.getElementById('notificationBtn');
+  const notificationPanel = document.getElementById('notificationPanel');
+  const notificationBadge = document.getElementById('notificationBadge');
+  const notificationList = document.getElementById('notificationList');
+  const closeNotifications = document.getElementById('closeNotifications');
+  
+  if (!notificationBtn || !notificationPanel) return;
+  
+  let notificationsPanelOpen = false;
+  let notificationPermissionGranted = false;
+  let checkedTasks = new Set(); // Track which tasks we've already shown popup for
+  
+  // Request notification permission
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission().then(function(permission) {
+      notificationPermissionGranted = permission === 'granted';
+      console.log('Notification permission:', permission);
+    });
+  } else if ('Notification' in window && Notification.permission === 'granted') {
+    notificationPermissionGranted = true;
+  }
+  
+  // Toggle notification panel
+  notificationBtn.onclick = function(e) {
+    e.stopPropagation();
+    notificationsPanelOpen = !notificationsPanelOpen;
+    notificationPanel.style.display = notificationsPanelOpen ? 'block' : 'none';
+    if (notificationsPanelOpen) {
+      renderNotifications();
+    }
+  };
+  
+  // Close notifications
+  if (closeNotifications) {
+    closeNotifications.onclick = function() {
+      notificationsPanelOpen = false;
+      notificationPanel.style.display = 'none';
+    };
+  }
+  
+  // Close when clicking outside
+  document.addEventListener('click', function(e) {
+    if (notificationsPanelOpen && 
+        !notificationPanel.contains(e.target) && 
+        !notificationBtn.contains(e.target)) {
+      notificationsPanelOpen = false;
+      notificationPanel.style.display = 'none';
+    }
+  });
+  
+  // Calculate time remaining with date and time
+  function getTimeRemaining(dueDate, dueTime) {
+    if (!dueDate) return null;
+    
+    const now = new Date();
+    let due = new Date(dueDate);
+    
+    // If time is specified, set it
+    if (dueTime) {
+      const timeParts = dueTime.split(':');
+      due.setHours(parseInt(timeParts[0], 10));
+      due.setMinutes(parseInt(timeParts[1], 10));
+      due.setSeconds(0);
+    } else {
+      // If no time specified, default to end of day
+      due.setHours(23, 59, 59);
+    }
+    
+    const diff = due - now;
+    
+    if (diff < 0) {
+      return { overdue: true, text: 'Overdue', days: 0, hours: 0, minutes: 0, isDueNow: false };
+    }
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    // Check if task is due within 5 minutes
+    const isDueNow = diff <= 5 * 60 * 1000 && diff > 0;
+    
+    if (days > 0) {
+      return { overdue: false, text: days + ' day' + (days > 1 ? 's' : '') + ' remaining', days: days, hours: hours, minutes: minutes, isDueNow: isDueNow };
+    } else if (hours > 0) {
+      return { overdue: false, text: hours + ' hour' + (hours > 1 ? 's' : '') + ' remaining', days: 0, hours: hours, minutes: minutes, isDueNow: isDueNow };
+    } else {
+      return { overdue: false, text: minutes + ' minute' + (minutes > 1 ? 's' : '') + ' remaining', days: 0, hours: 0, minutes: minutes, isDueNow: isDueNow };
+    }
+  }
+  
+  // Get notification priority
+  function getNotificationPriority(timeRemaining) {
+    if (!timeRemaining) return 'info';
+    if (timeRemaining.overdue) return 'urgent';
+    if (timeRemaining.isDueNow) return 'urgent'; // Due within 5 minutes
+    if (timeRemaining.days === 0) return 'urgent'; // Due today
+    if (timeRemaining.days === 1) return 'warning'; // Due tomorrow
+    if (timeRemaining.days <= 3) return 'warning'; // Due within 3 days
+    return 'info';
+  }
+  
+  // Get notification icon
+  function getNotificationIcon(priority) {
+    if (priority === 'urgent') return 'fa-exclamation-triangle';
+    if (priority === 'warning') return 'fa-clock';
+    return 'fa-info-circle';
+  }
+  
+  // Show browser popup notification
+  function showPopupNotification(task, timeRemaining) {
+    if (!notificationPermissionGranted || !('Notification' in window)) return;
+    
+    // Don't show if already shown for this task
+    const taskKey = task.id + '-' + task.due + '-' + task.time;
+    if (checkedTasks.has(taskKey)) return;
+    
+    checkedTasks.add(taskKey);
+    
+    let title = '⚠️ Task Due Soon!';
+    let body = task.title;
+    
+    if (timeRemaining.overdue) {
+      title = '🔴 Overdue Task!';
+      body = task.title + '\n' + 'This task is overdue!';
+    } else if (timeRemaining.isDueNow) {
+      title = '⏰ Task Due Now!';
+      body = task.title + '\n' + timeRemaining.text;
+    }
+    
+    try {
+      const notification = new Notification(title, {
+        body: body,
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23dc2626"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zm-2 1H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6z"/></svg>',
+        badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%23dc2626"><circle cx="12" cy="12" r="10"/></svg>',
+        tag: taskKey,
+        requireInteraction: true,
+        silent: false
+      });
+      
+      notification.onclick = function() {
+        window.focus();
+        notification.close();
+        // Open notification panel
+        notificationsPanelOpen = true;
+        notificationPanel.style.display = 'block';
+        renderNotifications();
+      };
+    } catch (err) {
+      console.log('Notification error:', err);
+    }
+  }
+  
+  // Render notifications
+  function renderNotifications() {
+    const incompleteTasks = tasks.filter(function(t) { 
+      return !t.done && t.due; 
+    });
+    
+    if (incompleteTasks.length === 0) {
+      notificationList.innerHTML = 
+        '<div class="notification-empty">' +
+          '<i class="fas fa-check-circle"></i>' +
+          '<div style="font-weight:600;color:var(--text);margin-bottom:0.5rem">All caught up!</div>' +
+          '<div>You have no upcoming task deadlines</div>' +
+        '</div>';
+      return;
+    }
+    
+    // Sort by due date (earliest first)
+    incompleteTasks.sort(function(a, b) {
+      const dateA = new Date(a.due + (a.time ? ' ' + a.time : ''));
+      const dateB = new Date(b.due + (b.time ? ' ' + b.time : ''));
+      return dateA - dateB;
+    });
+    
+    notificationList.innerHTML = '';
+    
+    incompleteTasks.forEach(function(task) {
+      const timeRemaining = getTimeRemaining(task.due, task.time);
+      const priority = getNotificationPriority(timeRemaining);
+      const icon = getNotificationIcon(priority);
+      
+      let message = '';
+      if (timeRemaining.overdue) {
+        message = '<strong style="color:#dc2626">Task is overdue!</strong> Due date was ' + task.due + (task.time ? ' at ' + task.time : '');
+      } else {
+        message = timeRemaining.text + ' • Due ' + task.due + (task.time ? ' at ' + task.time : '');
+      }
+      
+      const notificationItem = document.createElement('div');
+      notificationItem.className = 'notification-item ' + priority;
+      notificationItem.innerHTML = 
+        '<div class="notification-content">' +
+          '<div class="notification-icon">' +
+            '<i class="fas ' + icon + '"></i>' +
+          '</div>' +
+          '<div class="notification-body">' +
+            '<div class="notification-title">' + task.title + '</div>' +
+            '<div class="notification-message">' + message + '</div>' +
+            '<div class="notification-time">' +
+              '<i class="fas fa-tag"></i> ' + task.priority + ' priority • ' + task.category +
+            '</div>' +
+          '</div>' +
+        '</div>';
+      
+      // Click to view task details
+      notificationItem.onclick = function() {
+        alert('Task: ' + task.title + '\n' +
+              'Priority: ' + task.priority + '\n' +
+              'Category: ' + task.category + '\n' +
+              'Due: ' + task.due + (task.time ? ' at ' + task.time : '') + '\n' +
+              'Time remaining: ' + timeRemaining.text + '\n' +
+              (task.note ? '\nNote: ' + task.note : ''));
+      };
+      
+      notificationList.appendChild(notificationItem);
+    });
+  }
+  
+  // Check for tasks due soon and show popup
+  function checkDueTasks() {
+    const incompleteTasks = tasks.filter(function(t) { 
+      return !t.done && t.due; 
+    });
+    
+    incompleteTasks.forEach(function(task) {
+      const timeRemaining = getTimeRemaining(task.due, task.time);
+      if (timeRemaining && (timeRemaining.overdue || timeRemaining.isDueNow)) {
+        showPopupNotification(task, timeRemaining);
+      }
+    });
+  }
+  
+  // Update notification badge
+  function updateNotificationBadge() {
+    const now = new Date();
+    const urgentTasks = tasks.filter(function(t) {
+      if (!t.done && t.due) {
+        const timeRemaining = getTimeRemaining(t.due, t.time);
+        if (timeRemaining) {
+          return timeRemaining.overdue || timeRemaining.days <= 3;
+        }
+      }
+      return false;
+    });
+    
+    const count = urgentTasks.length;
+    if (count > 0) {
+      notificationBadge.textContent = count;
+      notificationBadge.style.display = 'block';
+    } else {
+      notificationBadge.style.display = 'none';
+    }
+  }
+  
+  // Initial update
+  updateNotificationBadge();
+  checkDueTasks();
+  
+  // Update every minute
+  setInterval(function() {
+    updateNotificationBadge();
+    checkDueTasks();
+  }, 60000);
+  
+  // Update badge when tasks change
+  const originalRender = render;
+  render = function() {
+    originalRender();
+    updateNotificationBadge();
+  };
+}
+
+// Initialize notification system after page loads
+if (typeof window !== 'undefined') {
+  const originalOnload = window.onload;
+  window.onload = function() {
+    if (originalOnload) originalOnload();
+    setTimeout(initNotificationSystem, 500);
+  };
+}
