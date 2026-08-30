@@ -1,7 +1,11 @@
 /* ── Auth page ───────────────────────────────────────────────────────────── */
+body:has(.auth-page) {
+  display: block;
+}
+
 .auth-page {
   min-height: 100vh;
-  width: 100vw;
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -9,8 +13,11 @@
   padding: 2rem 1rem;
   gap: 1.5rem;
   background: var(--bg);
-  position: relative;
-  overflow-x: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 .auth-brand {
