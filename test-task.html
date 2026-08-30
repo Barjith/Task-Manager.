@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Add Test</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body { padding: 2rem; }
+    .test-panel {
+      background: var(--panel);
+      border: 2px solid var(--accent);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 1rem 0;
+    }
+    .test-panel h2 {
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    button {
+      background: var(--accent);
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin: 5px;
+      font-weight: bold;
+    }
+    .log {
+      background: #000;
+      color: #00f0a0;
+      padding: 1rem;
+      border-radius: 6px;
+      font-family: monospace;
+      max-height: 300px;
+      overflow-y: auto;
+      margin: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="color: var(--accent);"><i class="fas fa-vial"></i> Task Addition Test</h1>
+  
+  <div class="test-panel">
+    <h2>Quick Actions</h2>
+    <button onclick="setupTestUser()">1. Setup Test User</button>
+    <button onclick="addTestTask()">2. Add Test Task</button>
+    <button onclick="checkTasks()">3. Check Tasks</button>
+    <button onclick="clearAll()">4. Clear All</button>
+    <button onclick="location.href='index.html'">Go to Main App</button>
+  </div>
+  
+  <div class="test-panel">
+    <h2>Test Log</h2>
+    <div class="log" id="log"></div>
+  </div>
+  
+  <div class="test-panel">
+    <h2>Current State</h2>
+    <div id="state" style="color: var(--text); font-family: monospace; white-space: pre-wrap;"></div>
+  </div>
+
+  <script>
+    function log(msg) {
+      const logEl = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      logEl.innerHTML += `[${time}] ${msg}<br>`;
+      logEl.scrollTop = logEl.scrollHeight;
+      console.log(msg);
+    }
+    
+    function updateState() {
+      const user = localStorage.getItem('tm_user');
+      const users = localStorage.getItem('tm_users');
+      const tasks = localStorage.getItem('taskmaster_tasks');
+      
+      document.getElementById('state').innerHTML = 
+        `Current User: ${user || 'Not logged in'}\n\n` +
+        `Users: ${users || 'None'}\n\n` +
+        `Tasks: ${tasks || 'None'}`;
+    }
+    
+    function setupTestUser() {
+      const user = {
+        name: 'Test User',
+        email: 'test@test.com',
+        password: '123456'
+      };
+      
+      const users = [user];
+      
+      localStorage.setItem('tm_users', JSON.stringify(users));
+      localStorage.setItem('tm_user', JSON.stringify({ name: user.name, email: user.email }));
+      
+      log('✅ Test user created and logged in');
+      log('   Email: test@test.com');
+      log('   Password: 123456');
+      updateState();
+    }
+    
+    function addTestTask() {
+      if (!localStorage.getItem('tm_user')) {
+        log('❌ Please setup test user first!');
+        return;
+      }
+      
+      const task = {
+        id: Date.now().toString(),
+        title: 'Test Task ' + Date.now(),
+        note: 'This is a test task',
+        priority: 'high',
+        category: 'work',
+        due: '2024-12-31',
+        done: false,
+        createdAt: Date.now()
+      };
+      
+      let tasks = [];
+      try {
+        tasks = JSON.parse(localStorage.getItem('taskmaster_tasks') || '[]');
+      } catch (e) {
+        log('⚠️ Error reading tasks, starting fresh');
+      }
+      
+      tasks.push(task);
+      localStorage.setItem('taskmaster_tasks', JSON.stringify(tasks));
+      
+      log('✅ Task added: ' + task.title);
+      log('   Total tasks: ' + tasks.length);
+      updateState();
+    }
+    
+    function checkTasks() {
+      try {
+        const tasks = JSON.parse(localStorage.getItem('taskmaster_tasks') || '[]');
+        log('📋 Total tasks: ' + tasks.length);
+        
+        if (tasks.length > 0) {
+          tasks.forEach(function(task, i) {
+            log(`   ${i + 1}. ${task.title} (${task.priority}, ${task.category})`);
+          });
+        } else {
+          log('   No tasks found');
+        }
+      } catch (e) {
+        log('❌ Error reading tasks: ' + e.message);
+      }
+      updateState();
+    }
+    
+    function clearAll() {
+      localStorage.clear();
+      log('🗑️ All data cleared');
+      updateState();
+    }
+    
+    // Initialize
+    log('🚀 Test page loaded');
+    updateState();
+  </script>
+</body>
+</html>

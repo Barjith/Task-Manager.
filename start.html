@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskMaster - Start Here</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="auth.css" />
+  <style>
+    .landing {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
+      text-align: center;
+    }
+    
+    .landing-hero {
+      max-width: 700px;
+      margin-bottom: 3rem;
+    }
+    
+    .landing-hero h1 {
+      font-size: 3.5rem;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+    
+    .landing-hero p {
+      font-size: 1.3rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+    
+    .landing-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+      max-width: 900px;
+      width: 100%;
+      margin-bottom: 2rem;
+    }
+    
+    .landing-card {
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-decoration: none;
+      color: var(--text);
+      transition: transform 0.2s, border-color 0.2s;
+      cursor: pointer;
+    }
+    
+    .landing-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+    }
+    
+    .landing-card i {
+      font-size: 2.5rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      display: block;
+    }
+    
+    .landing-card h3 {
+      font-size: 1.3rem;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+    
+    .landing-card p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+    
+    .landing-status {
+      background: var(--panel);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      max-width: 600px;
+      width: 100%;
+      margin-top: 2rem;
+    }
+    
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem;
+      background: var(--bg-alt);
+      border-radius: var(--radius-sm);
+      margin: 0.5rem 0;
+    }
+    
+    .status-icon {
+      font-size: 1.5rem;
+    }
+    
+    .status-icon.loading { color: var(--warn); }
+    .status-icon.success { color: var(--accent); }
+    .status-icon.error { color: var(--danger); }
+    
+    @media (max-width: 768px) {
+      .landing-hero h1 {
+        font-size: 2.5rem;
+      }
+      .landing-hero p {
+        font-size: 1.1rem;
+      }
+      .landing-cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="landing">
+    <div class="landing-hero">
+      <h1><i class="fas fa-tasks"></i> TaskMaster</h1>
+      <p>Professional task management application with authentication and full CRUD operations</p>
+    </div>
+    
+    <div class="landing-cards">
+      <a href="diagnostic.html" class="landing-card">
+        <i class="fas fa-stethoscope"></i>
+        <h3>Run Diagnostics</h3>
+        <p>Test all JavaScript components, LocalStorage, and verify everything is working correctly</p>
+      </a>
+      
+      <a href="test.html" class="landing-card">
+        <i class="fas fa-vial"></i>
+        <h3>Test Suite</h3>
+        <p>Create test accounts, sample tasks, and verify functionality before using the app</p>
+      </a>
+      
+      <a href="login.html" class="landing-card">
+        <i class="fas fa-rocket"></i>
+        <h3>Launch App</h3>
+        <p>Go directly to the login page and start managing your tasks</p>
+      </a>
+    </div>
+    
+    <div class="landing-status">
+      <h3 style="margin-bottom: 1rem; color: var(--accent);">System Status</h3>
+      
+      <div class="status-item">
+        <span class="status-icon loading" id="jsStatus">⏳</span>
+        <div style="flex: 1; text-align: left;">
+          <strong>JavaScript</strong><br>
+          <span id="jsText" style="color: var(--muted); font-size: 0.9rem;">Checking...</span>
+        </div>
+      </div>
+      
+      <div class="status-item">
+        <span class="status-icon loading" id="storageStatus">⏳</span>
+        <div style="flex: 1; text-align: left;">
+          <strong>LocalStorage</strong><br>
+          <span id="storageText" style="color: var(--muted); font-size: 0.9rem;">Checking...</span>
+        </div>
+      </div>
+      
+      <div class="status-item">
+        <span class="status-icon loading" id="filesStatus">⏳</span>
+        <div style="flex: 1; text-align: left;">
+          <strong>Required Files</strong><br>
+          <span id="filesText" style="color: var(--muted); font-size: 0.9rem;">Checking...</span>
+        </div>
+      </div>
+      
+      <div class="status-item">
+        <span class="status-icon loading" id="iconStatus">⏳</span>
+        <div style="flex: 1; text-align: left;">
+          <strong>Font Awesome Icons</strong><br>
+          <span id="iconText" style="color: var(--muted); font-size: 0.9rem;">Checking...</span>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-top: 2rem; color: var(--muted); font-size: 0.9rem;">
+      <p>Need help? Check <a href="TROUBLESHOOTING.md" style="color: var(--accent);">Troubleshooting Guide</a></p>
+    </div>
+  </div>
+  
+  <script>
+    console.log('%c[Landing] Page loaded', 'color: #00f0a0; font-weight: bold;');
+    
+    // Test 1: JavaScript
+    setTimeout(() => {
+      document.getElementById('jsStatus').innerHTML = '✅';
+      document.getElementById('jsStatus').className = 'status-icon success';
+      document.getElementById('jsText').innerHTML = 'Working correctly';
+      document.getElementById('jsText').style.color = 'var(--accent)';
+    }, 500);
+    
+    // Test 2: LocalStorage
+    setTimeout(() => {
+      try {
+        localStorage.setItem('test', 'ok');
+        localStorage.removeItem('test');
+        document.getElementById('storageStatus').innerHTML = '✅';
+        document.getElementById('storageStatus').className = 'status-icon success';
+        document.getElementById('storageText').innerHTML = 'Available and working';
+        document.getElementById('storageText').style.color = 'var(--accent)';
+      } catch (e) {
+        document.getElementById('storageStatus').innerHTML = '❌';
+        document.getElementById('storageStatus').className = 'status-icon error';
+        document.getElementById('storageText').innerHTML = 'Error: ' + e.message;
+        document.getElementById('storageText').style.color = 'var(--danger)';
+      }
+    }, 1000);
+    
+    // Test 3: Files
+    setTimeout(() => {
+      Promise.all([
+        fetch('auth.js').then(r => r.ok),
+        fetch('app.js').then(r => r.ok),
+        fetch('login.html').then(r => r.ok)
+      ]).then(results => {
+        if (results.every(r => r)) {
+          document.getElementById('filesStatus').innerHTML = '✅';
+          document.getElementById('filesStatus').className = 'status-icon success';
+          document.getElementById('filesText').innerHTML = 'All required files present';
+          document.getElementById('filesText').style.color = 'var(--accent)';
+        } else {
+          throw new Error('Some files missing');
+        }
+      }).catch(e => {
+        document.getElementById('filesStatus').innerHTML = '❌';
+        document.getElementById('filesStatus').className = 'status-icon error';
+        document.getElementById('filesText').innerHTML = 'Some files not found';
+        document.getElementById('filesText').style.color = 'var(--danger)';
+      });
+    }, 1500);
+    
+    // Test 4: Icons
+    setTimeout(() => {
+      const icons = document.querySelectorAll('.fas');
+      if (icons.length > 3) {
+        document.getElementById('iconStatus').innerHTML = '✅';
+        document.getElementById('iconStatus').className = 'status-icon success';
+        document.getElementById('iconText').innerHTML = icons.length + ' icons loaded from CDN';
+        document.getElementById('iconText').style.color = 'var(--accent)';
+      } else {
+        document.getElementById('iconStatus').innerHTML = '⚠️';
+        document.getElementById('iconStatus').className = 'status-icon loading';
+        document.getElementById('iconText').innerHTML = 'Icons may not be loading';
+        document.getElementById('iconText').style.color = 'var(--warn)';
+      }
+    }, 2000);
+  </script>
+</body>
+</html>

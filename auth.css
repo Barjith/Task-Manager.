@@ -14,9 +14,17 @@
 }
 
 .auth-brand {
-  display: flex; align-items: center; gap: .6rem;
+  display: flex; align-items: center; gap: .75rem;
 }
-.auth-brand span { font-size: 1.8rem; }
+
+.brand-icon {
+  font-size: 1.8rem;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent; 
+  background-clip: text;
+}
+
 .auth-brand h1 {
   font-size: 2rem; font-weight: 900;
   background: linear-gradient(135deg, var(--accent), var(--accent2));
@@ -88,10 +96,16 @@
   position: absolute; right: .6rem; top: 50%;
   transform: translateY(-50%);
   background: none; border: none; cursor: pointer;
-  font-size: .95rem; opacity: .5;
+  font-size: .95rem; 
+  color: var(--muted);
+  opacity: .7;
   transition: opacity var(--ease);
+  padding: .5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.pass-toggle:hover { opacity: 1; }
+.pass-toggle:hover { opacity: 1; color: var(--text); }
 
 .auth-error {
   color: var(--danger); font-size: .76rem; min-height: .9rem;
@@ -118,6 +132,10 @@
   font-weight: 700; font-size: .95rem; cursor: pointer;
   transition: opacity var(--ease), transform var(--ease);
   margin-top: .5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
 }
 .btn-auth:hover { opacity: .85; transform: translateY(-1px); }
 .btn-auth:focus-visible { outline: 2px solid var(--accent2); }

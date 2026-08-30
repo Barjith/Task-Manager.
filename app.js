@@ -1,233 +1,417 @@
-'use strict';
+console.log('APP.JS LOADED!');
 
-// ── Auth guard ────────────────────────────────────────────────────────────────
+// Check if user is logged in
 const currentUser = JSON.parse(localStorage.getItem('tm_user') || 'null');
-if (!currentUser) window.location.href = 'login.html';
+if (!currentUser) {
+  window.location.href = 'login.html';
+}
 
-// ── State ─────────────────────────────────────────────────────────────────────
+// Storage key
 const STORAGE_KEY = 'taskmaster_tasks';
-let tasks  = load();
+
+// Load tasks
+function loadTasks() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  } catch (e) {
+    return [];
+  }
+}
+
+// Save tasks
+function saveTasks(tasks) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+}
+
+// State
+let tasks = loadTasks();
 let filter = 'all';
 let editId = null;
 
-// ── Persistence ───────────────────────────────────────────────────────────────
-function load() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  catch { return []; }
-}
-function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks)); }
+console.log('Loaded', tasks.length, 'tasks');
 
-// ── DOM refs ──────────────────────────────────────────────────────────────────
-const taskList     = document.getElementById('taskList');
-const emptyState   = document.getElementById('emptyState');
-const taskInput    = document.getElementById('taskInput');
-const taskNote     = document.getElementById('taskNote');
-const taskPriority = document.getElementById('taskPriority');
-const taskCategory = document.getElementById('taskCategory');
-const taskDue      = document.getElementById('taskDue');
-const submitBtn    = document.getElementById('submitBtn');
-const searchInput  = document.getElementById('searchInput');
-const sortSelect   = document.getElementById('sortSelect');
-const modalBackdrop= document.getElementById('modalBackdrop');
-const editInput    = document.getElementById('editInput');
-const editNote     = document.getElementById('editNote');
-const editPriority = document.getElementById('editPriority');
-const editCategory = document.getElementById('editCategory');
-const editDue      = document.getElementById('editDue');
-
-// ── Theme ─────────────────────────────────────────────────────────────────────
-const html     = document.documentElement;
-const themeBtn = document.getElementById('themeBtn');
-const savedTheme = localStorage.getItem('tm_theme') || 'dark';
-html.setAttribute('data-theme', savedTheme);
-themeBtn.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
-
-themeBtn.addEventListener('click', () => {
-  const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-  html.setAttribute('data-theme', next);
-  localStorage.setItem('tm_theme', next);
-  themeBtn.textContent = next === 'dark' ? '🌙' : '☀️';
-});
-
-// ── User greeting & logout ────────────────────────────────────────────────────
-const greetingEl = document.getElementById('userGreeting');
-if (greetingEl && currentUser) greetingEl.textContent = `👋 ${currentUser.name.split(' ')[0]}`;
-
-document.getElementById('logoutBtn')?.addEventListener('click', () => {
-  localStorage.removeItem('tm_user');
-  window.location.href = 'login.html';
-});
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const uid  = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
-const esc  = s  => s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt  = d  => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
-const isOverdue = d => d && new Date(d) < new Date(new Date().toDateString());
-
-const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
-
-// ── Render ────────────────────────────────────────────────────────────────────
-function render() {
-  const q = searchInput.value.trim().toLowerCase();
-
-  let visible = tasks.filter(t => {
-    if (filter === 'active'   && t.done)  return false;
-    if (filter === 'completed'&& !t.done) return false;
-    if (q && !t.title.toLowerCase().includes(q) && !(t.note||'').toLowerCase().includes(q)) return false;
-    return true;
+// Wait for page to load
+window.onload = function() {
+  console.log('APP.JS: Page loaded, initializing...');
+  
+  // Get elements
+  const taskList = document.getElementById('taskList');
+  const emptyState = document.getElementById('emptyState');
+  const taskInput = document.getElementById('taskInput');
+  const taskNote = document.getElementById('taskNote');
+  const taskPriority = document.getElementById('taskPriority');
+  const taskCategory = document.getElementById('taskCategory');
+  const taskDue = document.getElementById('taskDue');
+  const taskForm = document.getElementById('taskForm');
+  const searchInput = document.getElementById('searchInput');
+  const sortSelect = document.getElementById('sortSelect');
+  const themeBtn = document.getElementById('themeBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+  const userGreeting = document.getElementById('userGreeting');
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const sidebar = document.getElementById('sidebar');
+  
+  console.log('Elements check:', {
+    taskList: !!taskList,
+    taskForm: !!taskForm,
+    searchInput: !!searchInput
   });
-
-  const sort = sortSelect.value;
-  visible.sort((a, b) => {
-    if (sort === 'oldest')   return a.createdAt - b.createdAt;
-    if (sort === 'priority') return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
-    if (sort === 'due') {
-      if (!a.due && !b.due) return 0;
-      if (!a.due) return 1;
-      if (!b.due) return -1;
-      return new Date(a.due) - new Date(b.due);
+  
+  // Set user name
+  if (userGreeting && currentUser) {
+    userGreeting.textContent = currentUser.name.split(' ')[0];
+  }
+  
+  // Theme toggle
+  if (themeBtn) {
+    const savedTheme = localStorage.getItem('tm_theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    themeBtn.innerHTML = savedTheme === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+    
+    themeBtn.onclick = function() {
+      const current = document.documentElement.getAttribute('data-theme');
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('tm_theme', next);
+      themeBtn.innerHTML = next === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+    };
+  }
+  
+  // Logout
+  if (logoutBtn) {
+    logoutBtn.onclick = function() {
+      localStorage.removeItem('tm_user');
+      window.location.href = 'login.html';
+    };
+  }
+  
+  // Mobile menu
+  if (mobileMenuBtn && sidebar) {
+    mobileMenuBtn.onclick = function() {
+      sidebar.classList.toggle('active');
+    };
+  }
+  
+  // Render function
+  function render() {
+    console.log('Rendering tasks... Total:', tasks.length, 'Filter:', filter);
+    
+    if (!taskList) {
+      console.error('taskList element not found!');
+      return;
     }
-    return b.createdAt - a.createdAt; // newest
-  });
-
-  taskList.innerHTML = '';
-  emptyState.hidden  = visible.length > 0;
-
-  visible.forEach(task => {
-    const li = document.createElement('li');
-    li.className = `task-item${task.done ? ' done' : ''}`;
-    li.setAttribute('data-priority', task.priority);
-    li.setAttribute('data-id', task.id);
-    li.setAttribute('role', 'listitem');
-
-    const overdue = !task.done && isOverdue(task.due);
-
-    li.innerHTML = `
-      <input type="checkbox" class="task-check" ${task.done ? 'checked' : ''}
-        aria-label="Mark '${esc(task.title)}' as ${task.done ? 'incomplete' : 'complete'}" />
-      <div class="task-body">
-        <span class="task-title">${esc(task.title)}</span>
-        ${task.note ? `<span class="task-note">${esc(task.note)}</span>` : ''}
-        <div class="task-chips">
-          <span class="chip chip-priority-${task.priority}">${task.priority}</span>
-          <span class="chip chip-cat">${esc(task.category)}</span>
-          ${task.due ? `<span class="chip chip-due${overdue?' overdue':''}">${overdue?'⚠️ ':''}${fmt(task.due)}</span>` : ''}
-        </div>
-      </div>
-      <div class="task-actions">
-        <button class="act-btn edit"   aria-label="Edit task '${esc(task.title)}'">✏️</button>
-        <button class="act-btn delete" aria-label="Delete task '${esc(task.title)}'">🗑️</button>
-      </div>
-    `;
-
-    // Toggle done
-    li.querySelector('.task-check').addEventListener('change', () => {
-      task.done = !task.done;
-      persist(); render();
+    
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+    
+    // Filter tasks
+    let filtered = tasks.filter(function(task) {
+      if (filter === 'active' && task.done) return false;
+      if (filter === 'completed' && !task.done) return false;
+      if (searchTerm && !task.title.toLowerCase().includes(searchTerm)) return false;
+      return true;
     });
-
-    // Edit
-    li.querySelector('.act-btn.edit').addEventListener('click', () => openEdit(task.id));
-
-    // Delete with animation
-    li.querySelector('.act-btn.delete').addEventListener('click', () => {
-      li.style.transition = 'all .25s ease';
-      li.style.transform  = 'translateX(30px)';
-      li.style.opacity    = '0';
-      setTimeout(() => {
-        tasks = tasks.filter(t => t.id !== task.id);
-        persist(); render();
-      }, 240);
+    
+    // Sort tasks
+    const sortBy = sortSelect ? sortSelect.value : 'newest';
+    if (sortBy === 'oldest') {
+      filtered.sort(function(a, b) { return a.createdAt - b.createdAt; });
+    } else if (sortBy === 'priority') {
+      const order = { high: 0, medium: 1, low: 2 };
+      filtered.sort(function(a, b) { return order[a.priority] - order[b.priority]; });
+    } else {
+      filtered.sort(function(a, b) { return b.createdAt - a.createdAt; });
+    }
+    
+    // Show/hide empty state FIRST
+    if (emptyState) {
+      if (filtered.length > 0) {
+        emptyState.hidden = true;
+        emptyState.style.display = 'none';
+      } else {
+        emptyState.hidden = false;
+        emptyState.style.display = 'flex';
+      }
+    }
+    
+    // Clear list
+    taskList.innerHTML = '';
+    
+    // Render each task
+    console.log('Filtered tasks to show:', filtered.length);
+    
+    filtered.forEach(function(task) {
+      const li = document.createElement('li');
+      li.className = 'task-item' + (task.done ? ' done' : '');
+      li.setAttribute('data-priority', task.priority);
+      
+      li.innerHTML = '<input type="checkbox" class="task-check" ' + (task.done ? 'checked' : '') + ' data-id="' + task.id + '">' +
+        '<div class="task-body">' +
+        '<span class="task-title">' + task.title + '</span>' +
+        (task.note ? '<span class="task-note">' + task.note + '</span>' : '') +
+        '<div class="task-chips">' +
+        '<span class="chip chip-priority-' + task.priority + '">' + task.priority + '</span>' +
+        '<span class="chip chip-cat">' + task.category + '</span>' +
+        (task.due ? '<span class="chip chip-due">' + task.due + '</span>' : '') +
+        '</div></div>' +
+        '<div class="task-actions">' +
+        '<button class="act-btn edit" data-id="' + task.id + '"><i class="fas fa-edit"></i></button>' +
+        '<button class="act-btn delete" data-id="' + task.id + '"><i class="fas fa-trash-alt"></i></button>' +
+        '</div>';
+      
+      taskList.appendChild(li);
     });
-
-    taskList.appendChild(li);
+    
+    // Update stats
+    const statTotal = document.getElementById('statTotal');
+    const statActive = document.getElementById('statActive');
+    const statDone = document.getElementById('statDone');
+    
+    if (statTotal) statTotal.textContent = tasks.length;
+    if (statActive) statActive.textContent = tasks.filter(function(t) { return !t.done; }).length;
+    if (statDone) statDone.textContent = tasks.filter(function(t) { return t.done; }).length;
+    
+    // Update category badges
+    const counts = { work: 0, study: 0, personal: 0, general: 0 };
+    tasks.filter(function(t) { return !t.done; }).forEach(function(t) {
+      if (counts[t.category] !== undefined) counts[t.category]++;
+    });
+    
+    const badgeWork = document.getElementById('badgeWork');
+    const badgeStudy = document.getElementById('badgeStudy');
+    const badgePersonal = document.getElementById('badgePersonal');
+    const badgeGeneral = document.getElementById('badgeGeneral');
+    
+    if (badgeWork) badgeWork.textContent = counts.work;
+    if (badgeStudy) badgeStudy.textContent = counts.study;
+    if (badgePersonal) badgePersonal.textContent = counts.personal;
+    if (badgeGeneral) badgeGeneral.textContent = counts.general;
+    
+    // Attach event listeners to task items
+    attachTaskListeners();
+  }
+  
+  // Attach listeners to task items
+  function attachTaskListeners() {
+    // Checkboxes
+    document.querySelectorAll('.task-check').forEach(function(cb) {
+      cb.onclick = function() {
+        const id = cb.getAttribute('data-id');
+        const task = tasks.find(function(t) { return t.id === id; });
+        if (task) {
+          task.done = !task.done;
+          saveTasks(tasks);
+          render();
+        }
+      };
+    });
+    
+    // Edit buttons
+    document.querySelectorAll('.act-btn.edit').forEach(function(btn) {
+      btn.onclick = function() {
+        const id = btn.getAttribute('data-id');
+        openEditModal(id);
+      };
+    });
+    
+    // Delete buttons
+    document.querySelectorAll('.act-btn.delete').forEach(function(btn) {
+      btn.onclick = function() {
+        const id = btn.getAttribute('data-id');
+        if (confirm('Delete this task?')) {
+          tasks = tasks.filter(function(t) { return t.id !== id; });
+          saveTasks(tasks);
+          render();
+        }
+      };
+    });
+  }
+  
+  // Add task form
+  if (taskForm) {
+    taskForm.onsubmit = function(e) {
+      e.preventDefault();
+      console.log('Adding task...');
+      
+      const title = taskInput.value.trim();
+      if (!title) return;
+      
+      const task = {
+        id: Date.now().toString(),
+        title: title,
+        note: taskNote.value.trim(),
+        priority: taskPriority.value,
+        category: taskCategory.value,
+        due: taskDue.value || null,
+        done: false,
+        createdAt: Date.now()
+      };
+      
+      tasks.unshift(task);
+      saveTasks(tasks);
+      
+      console.log('Task added! Total tasks now:', tasks.length);
+      
+      taskInput.value = '';
+      taskNote.value = '';
+      taskDue.value = '';
+      
+      render();
+      console.log('Task added!');
+    };
+  }
+  
+  // Filter buttons
+  document.querySelectorAll('.filter-btn').forEach(function(btn) {
+    btn.onclick = function() {
+      filter = btn.getAttribute('data-filter');
+      document.querySelectorAll('.filter-btn').forEach(function(b) {
+        b.classList.remove('active');
+      });
+      btn.classList.add('active');
+      render();
+    };
   });
-
-  // Stats always reflect full task list
-  document.getElementById('statTotal').textContent  = tasks.length;
-  document.getElementById('statActive').textContent = tasks.filter(t => !t.done).length;
-  document.getElementById('statDone').textContent   = tasks.filter(t =>  t.done).length;
-}
-
-// ── Create ────────────────────────────────────────────────────────────────────
-document.getElementById('taskForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const title = taskInput.value.trim();
-  if (!title) return;
-
-  tasks.unshift({
-    id:        uid(),
-    title,
-    note:      taskNote.value.trim(),
-    priority:  taskPriority.value,
-    category:  taskCategory.value,
-    due:       taskDue.value || null,
-    done:      false,
-    createdAt: Date.now(),
+  
+  // Sidebar navigation
+  document.querySelectorAll('.nav-item[data-page]').forEach(function(item) {
+    item.onclick = function(e) {
+      e.preventDefault();
+      var page = item.getAttribute('data-page');
+      console.log('Navigation clicked:', page);
+      
+      // Remove active class from all nav items
+      document.querySelectorAll('.nav-item').forEach(function(nav) {
+        nav.classList.remove('active');
+      });
+      
+      // Add active class to clicked item
+      item.classList.add('active');
+      
+      // Show alert for now (you can create separate pages later)
+      if (page === 'dashboard') {
+        // Already on dashboard, just update title
+        document.querySelector('.page-title').textContent = 'Dashboard';
+      } else if (page === 'tasks') {
+        document.querySelector('.page-title').textContent = 'All Tasks';
+        alert('All Tasks view - showing all your tasks (same as dashboard for now)');
+      } else if (page === 'calendar') {
+        document.querySelector('.page-title').textContent = 'Calendar';
+        alert('Calendar view coming soon! This will show your tasks in a calendar format.');
+      } else if (page === 'analytics') {
+        document.querySelector('.page-title').textContent = 'Analytics';
+        alert('Analytics coming soon! This will show statistics and charts about your tasks.');
+      }
+    };
   });
-
-  taskInput.value    = '';
-  taskNote.value     = '';
-  taskPriority.value = 'medium';
-  taskCategory.value = 'general';
-  taskDue.value      = '';
-  taskInput.focus();
-  persist(); render();
-});
-
-// ── Filter ────────────────────────────────────────────────────────────────────
-document.querySelectorAll('.filter-btn[data-filter]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    filter = btn.dataset.filter;
-    document.querySelectorAll('.filter-btn[data-filter]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    render();
+  
+  // Category navigation
+  document.querySelectorAll('.nav-item[data-category]').forEach(function(item) {
+    item.onclick = function(e) {
+      e.preventDefault();
+      var category = item.getAttribute('data-category');
+      console.log('Category clicked:', category);
+      
+      // Filter by category
+      filter = 'all';
+      
+      // Update search to filter by category
+      var filtered = tasks.filter(function(task) {
+        return task.category === category;
+      });
+      
+      document.querySelector('.page-title').textContent = category.charAt(0).toUpperCase() + category.slice(1) + ' Tasks';
+      
+      alert('Filtering by ' + category + ' category. Found ' + filtered.length + ' tasks.\n\nNote: Full category filtering will be implemented next!');
+    };
   });
-});
-
-document.getElementById('clearDone').addEventListener('click', () => {
-  tasks = tasks.filter(t => !t.done);
-  persist(); render();
-});
-
-searchInput.addEventListener('input', render);
-sortSelect.addEventListener('change', render);
-
-// ── Edit modal ────────────────────────────────────────────────────────────────
-function openEdit(id) {
-  const task = tasks.find(t => t.id === id);
-  if (!task) return;
-  editId             = id;
-  editInput.value    = task.title;
-  editNote.value     = task.note || '';
-  editPriority.value = task.priority;
-  editCategory.value = task.category;
-  editDue.value      = task.due || '';
-  modalBackdrop.hidden = false;
-  editInput.focus();
-}
-
-function closeModal() {
-  modalBackdrop.hidden = true;
-  editId = null;
-}
-
-document.getElementById('editForm').addEventListener('submit', e => {
-  e.preventDefault();
-  const task = tasks.find(t => t.id === editId);
-  if (!task) return;
-  task.title    = editInput.value.trim() || task.title;
-  task.note     = editNote.value.trim();
-  task.priority = editPriority.value;
-  task.category = editCategory.value;
-  task.due      = editDue.value || null;
-  persist(); render(); closeModal();
-});
-
-document.getElementById('modalClose').addEventListener('click', closeModal);
-document.getElementById('modalCancel').addEventListener('click', closeModal);
-modalBackdrop.addEventListener('click', e => { if (e.target === modalBackdrop) closeModal(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-// ── Init ──────────────────────────────────────────────────────────────────────
-render();
+  
+  // Search
+  if (searchInput) {
+    searchInput.oninput = render;
+  }
+  
+  // Sort
+  if (sortSelect) {
+    sortSelect.onchange = render;
+  }
+  
+  // Clear done
+  const clearDoneBtn = document.getElementById('clearDone');
+  if (clearDoneBtn) {
+    clearDoneBtn.onclick = function() {
+      if (confirm('Clear all completed tasks?')) {
+        tasks = tasks.filter(function(t) { return !t.done; });
+        saveTasks(tasks);
+        render();
+      }
+    };
+  }
+  
+  // Edit modal
+  function openEditModal(id) {
+    const task = tasks.find(function(t) { return t.id === id; });
+    if (!task) return;
+    
+    editId = id;
+    
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const editInput = document.getElementById('editInput');
+    const editNote = document.getElementById('editNote');
+    const editPriority = document.getElementById('editPriority');
+    const editCategory = document.getElementById('editCategory');
+    const editDue = document.getElementById('editDue');
+    
+    if (editInput) editInput.value = task.title;
+    if (editNote) editNote.value = task.note || '';
+    if (editPriority) editPriority.value = task.priority;
+    if (editCategory) editCategory.value = task.category;
+    if (editDue) editDue.value = task.due || '';
+    
+    if (modalBackdrop) modalBackdrop.hidden = false;
+  }
+  
+  function closeEditModal() {
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    if (modalBackdrop) modalBackdrop.hidden = true;
+    editId = null;
+  }
+  
+  // Edit form
+  const editForm = document.getElementById('editForm');
+  if (editForm) {
+    editForm.onsubmit = function(e) {
+      e.preventDefault();
+      
+      const task = tasks.find(function(t) { return t.id === editId; });
+      if (!task) return;
+      
+      task.title = document.getElementById('editInput').value.trim() || task.title;
+      task.note = document.getElementById('editNote').value.trim();
+      task.priority = document.getElementById('editPriority').value;
+      task.category = document.getElementById('editCategory').value;
+      task.due = document.getElementById('editDue').value || null;
+      
+      saveTasks(tasks);
+      render();
+      closeEditModal();
+    };
+  }
+  
+  // Modal close buttons
+  const modalClose = document.getElementById('modalClose');
+  const modalCancel = document.getElementById('modalCancel');
+  const modalBackdrop = document.getElementById('modalBackdrop');
+  
+  if (modalClose) modalClose.onclick = closeEditModal;
+  if (modalCancel) modalCancel.onclick = closeEditModal;
+  if (modalBackdrop) {
+    modalBackdrop.onclick = function(e) {
+      if (e.target === modalBackdrop) closeEditModal();
+    };
+  }
+  
+  // Initial render
+  render();
+  
+  console.log('APP.JS: Initialization complete!');
+};

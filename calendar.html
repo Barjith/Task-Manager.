@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calendar - TaskMaster</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .calendar-container {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      margin: 1rem 0;
+    }
+    
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border);
+    }
+    
+    .calendar-header h2 {
+      font-size: 1.8rem;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .calendar-nav {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+    }
+    
+    .calendar-nav button {
+      background: var(--bg-alt);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 1rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    
+    .calendar-nav button:hover {
+      background: var(--panel2);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+    
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    
+    .calendar-day-header {
+      background: var(--panel2);
+      padding: 1rem;
+      text-align: center;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+    }
+    
+    .calendar-day {
+      background: var(--panel);
+      padding: 0.8rem;
+      min-height: 120px;
+      position: relative;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+    
+    .calendar-day:hover {
+      background: var(--panel2);
+      transform: scale(1.02);
+      z-index: 10;
+    }
+    
+    .calendar-day.other-month {
+      opacity: 0.3;
+    }
+    
+    .calendar-day.today {
+      background: rgba(0,240,160,0.1);
+      border: 2px solid var(--accent);
+    }
+    
+    .calendar-day-number {
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    
+    .calendar-day.today .calendar-day-number {
+      color: var(--accent);
+      font-size: 1.3rem;
+    }
+    
+    .calendar-task {
+      background: linear-gradient(135deg, rgba(0,240,160,0.15), rgba(0,200,240,0.15));
+      padding: 0.4rem 0.6rem;
+      margin: 0.3rem 0;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      border-left: 3px solid var(--accent);
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .calendar-task:hover {
+      background: linear-gradient(135deg, rgba(0,240,160,0.25), rgba(0,200,240,0.25));
+      transform: translateX(3px);
+    }
+    
+    .calendar-task.priority-high {
+      border-left-color: #ff6060;
+      background: linear-gradient(135deg, rgba(255,96,96,0.15), rgba(255,96,96,0.1));
+    }
+    
+    .calendar-task.priority-medium {
+      border-left-color: #fbbf24;
+      background: linear-gradient(135deg, rgba(251,191,36,0.15), rgba(251,191,36,0.1));
+    }
+    
+    .calendar-task.priority-low {
+      border-left-color: #34d399;
+      background: linear-gradient(135deg, rgba(52,211,153,0.15), rgba(52,211,153,0.1));
+    }
+    
+    .calendar-task.done {
+      opacity: 0.5;
+      text-decoration: line-through;
+    }
+    
+    .task-count {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background: var(--accent);
+      color: #000;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    
+    .legend {
+      display: flex;
+      gap: 2rem;
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: var(--bg-alt);
+      border-radius: var(--radius);
+      flex-wrap: wrap;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+    
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+    
+    .no-tasks {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      padding: 1rem;
+    }
+    
+    @media (max-width: 768px) {
+      .calendar-day {
+        min-height: 80px;
+        padding: 0.5rem;
+      }
+      
+      .calendar-day-number {
+        font-size: 0.9rem;
+      }
+      
+      .calendar-task {
+        font-size: 0.7rem;
+        padding: 0.3rem 0.4rem;
+      }
+      
+      .calendar-header h2 {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h2 class="page-title">
+        <i class="fas fa-calendar-alt"></i> Calendar View
+      </h2>
+      <button onclick="location.href='index.html'" class="btn-primary">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+      </button>
+    </header>
+
+    <div class="calendar-container">
+      <div class="calendar-header">
+        <h2>
+          <span id="currentMonth">January 2024</span>
+        </h2>
+        <div class="calendar-nav">
+          <button onclick="previousMonth()" aria-label="Previous month">
+            <i class="fas fa-chevron-left"></i> Prev
+          </button>
+          <button onclick="today()" aria-label="Go to today">
+            <i class="fas fa-calendar-day"></i> Today
+          </button>
+          <button onclick="nextMonth()" aria-label="Next month">
+            Next <i class="fas fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="calendar-grid" id="calendar"></div>
+
+      <div class="legend">
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, rgba(255,96,96,0.4), rgba(255,96,96,0.2));"></div>
+          <span>High Priority</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, rgba(251,191,36,0.4), rgba(251,191,36,0.2));"></div>
+          <span>Medium Priority</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: linear-gradient(135deg, rgba(52,211,153,0.4), rgba(52,211,153,0.2));"></div>
+          <span>Low Priority</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color" style="background: rgba(0,240,160,0.2); border: 2px solid var(--accent);"></div>
+          <span>Today</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('CALENDAR LOADED');
+    
+    // Current date
+    var currentDate = new Date();
+    var currentMonth = currentDate.getMonth();
+    var currentYear = currentDate.getFullYear();
+    
+    // Load tasks
+    var tasks = [];
+    try {
+      tasks = JSON.parse(localStorage.getItem('taskmaster_tasks') || '[]');
+      console.log('Loaded', tasks.length, 'tasks');
+    } catch (e) {
+      console.error('Error loading tasks:', e);
+    }
+    
+    // Month names
+    var monthNames = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    
+    // Day names
+    var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    
+    function renderCalendar() {
+      console.log('Rendering calendar for', monthNames[currentMonth], currentYear);
+      
+      // Update header
+      document.getElementById('currentMonth').textContent = monthNames[currentMonth] + ' ' + currentYear;
+      
+      // Get first day of month
+      var firstDay = new Date(currentYear, currentMonth, 1);
+      var lastDay = new Date(currentYear, currentMonth + 1, 0);
+      var daysInMonth = lastDay.getDate();
+      var startingDayOfWeek = firstDay.getDay();
+      
+      // Get days from previous month
+      var prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
+      
+      var calendar = document.getElementById('calendar');
+      calendar.innerHTML = '';
+      
+      // Add day headers
+      dayNames.forEach(function(day) {
+        var header = document.createElement('div');
+        header.className = 'calendar-day-header';
+        header.textContent = day;
+        calendar.appendChild(header);
+      });
+      
+      // Add days from previous month
+      for (var i = startingDayOfWeek - 1; i >= 0; i--) {
+        var day = prevMonthLastDay - i;
+        var dayEl = createDayElement(day, currentMonth - 1, currentYear, true);
+        calendar.appendChild(dayEl);
+      }
+      
+      // Add days of current month
+      var today = new Date();
+      for (var day = 1; day <= daysInMonth; day++) {
+        var isToday = (
+          day === today.getDate() &&
+          currentMonth === today.getMonth() &&
+          currentYear === today.getFullYear()
+        );
+        var dayEl = createDayElement(day, currentMonth, currentYear, false, isToday);
+        calendar.appendChild(dayEl);
+      }
+      
+      // Add days from next month
+      var totalCells = calendar.children.length - 7; // minus headers
+      var remainingCells = 42 - totalCells; // 6 rows of 7
+      for (var day = 1; day <= remainingCells; day++) {
+        var dayEl = createDayElement(day, currentMonth + 1, currentYear, true);
+        calendar.appendChild(dayEl);
+      }
+    }
+    
+    function createDayElement(day, month, year, otherMonth, isToday) {
+      var dayEl = document.createElement('div');
+      dayEl.className = 'calendar-day';
+      if (otherMonth) dayEl.className += ' other-month';
+      if (isToday) dayEl.className += ' today';
+      
+      var dateStr = year + '-' + 
+                    String(month + 1).padStart(2, '0') + '-' + 
+                    String(day).padStart(2, '0');
+      
+      dayEl.innerHTML = '<div class="calendar-day-number">' + day + '</div>';
+      
+      // Find tasks for this day
+      var dayTasks = tasks.filter(function(task) {
+        return task.due === dateStr;
+      });
+      
+      if (dayTasks.length > 0) {
+        // Show first 3 tasks
+        var displayTasks = dayTasks.slice(0, 3);
+        displayTasks.forEach(function(task) {
+          var taskEl = document.createElement('div');
+          taskEl.className = 'calendar-task priority-' + task.priority;
+          if (task.done) taskEl.className += ' done';
+          taskEl.textContent = task.title;
+          taskEl.title = task.title + '\nPriority: ' + task.priority + '\nCategory: ' + task.category;
+          taskEl.onclick = function(e) {
+            e.stopPropagation();
+            alert('Task: ' + task.title + '\n' +
+                  'Priority: ' + task.priority + '\n' +
+                  'Category: ' + task.category + '\n' +
+                  'Due: ' + task.due + '\n' +
+                  'Status: ' + (task.done ? 'Completed' : 'In Progress') + '\n' +
+                  (task.note ? '\nNote: ' + task.note : ''));
+          };
+          dayEl.appendChild(taskEl);
+        });
+        
+        // Show count if more than 3
+        if (dayTasks.length > 3) {
+          var countEl = document.createElement('div');
+          countEl.className = 'task-count';
+          countEl.textContent = dayTasks.length;
+          countEl.title = dayTasks.length + ' tasks on this day';
+          dayEl.appendChild(countEl);
+        }
+      }
+      
+      dayEl.onclick = function() {
+        if (dayTasks.length === 0) {
+          alert('No tasks on ' + monthNames[month] + ' ' + day + ', ' + year + '\n\nClick "Back to Dashboard" to add tasks.');
+        }
+      };
+      
+      return dayEl;
+    }
+    
+    function previousMonth() {
+      currentMonth--;
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      }
+      renderCalendar();
+    }
+    
+    function nextMonth() {
+      currentMonth++;
+      if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      renderCalendar();
+    }
+    
+    function today() {
+      var now = new Date();
+      currentMonth = now.getMonth();
+      currentYear = now.getFullYear();
+      renderCalendar();
+    }
+    
+    // Initialize
+    renderCalendar();
+    console.log('Calendar initialized!');
+  </script>
+</body>
+</html>

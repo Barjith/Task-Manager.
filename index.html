@@ -5,18 +5,104 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="TaskMaster — A state-driven task management app with full CRUD and local persistence." />
   <title>TaskMaster</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand">
+        <i class="fas fa-tasks brand-icon" aria-hidden="true"></i>
+        <h1>TaskMaster</h1>
+      </div>
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="index.html" class="nav-item active">
+        <i class="fas fa-th-large"></i>
+        <span>Dashboard</span>
+      </a>
+      <a href="index.html" class="nav-item">
+        <i class="fas fa-list-check"></i>
+        <span>All Tasks</span>
+      </a>
+      <a href="calendar.html" class="nav-item">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Calendar</span>
+      </a>
+      <a href="analytics.html" class="nav-item">
+        <i class="fas fa-chart-line"></i>
+        <span>Analytics</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-divider"></div>
+
+    <div class="sidebar-categories">
+      <h3 class="category-title">CATEGORIES</h3>
+      <a href="#" class="nav-item" data-category="work">
+        <i class="fas fa-briefcase"></i>
+        <span>Work</span>
+        <span class="badge" id="badgeWork">0</span>
+      </a>
+      <a href="#" class="nav-item" data-category="study">
+        <i class="fas fa-graduation-cap"></i>
+        <span>Study</span>
+        <span class="badge" id="badgeStudy">0</span>
+      </a>
+      <a href="#" class="nav-item" data-category="personal">
+        <i class="fas fa-user"></i>
+        <span>Personal</span>
+        <span class="badge" id="badgePersonal">0</span>
+      </a>
+      <a href="#" class="nav-item" data-category="general">
+        <i class="fas fa-folder"></i>
+        <span>General</span>
+        <span class="badge" id="badgeGeneral">0</span>
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-profile">
+        <div class="user-avatar">
+          <i class="fas fa-user"></i>
+        </div>
+        <div class="user-info">
+          <span class="user-name" id="userGreeting">User</span>
+          <span class="user-role">Subscriber</span>
+        </div>
+      </div>
+      <div class="sidebar-actions">
+        <button class="icon-btn" id="themeBtn" aria-label="Toggle light/dark mode">
+          <i class="fas fa-moon"></i>
+        </button>
+        <button class="icon-btn" id="logoutBtn" aria-label="Logout">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
   <div class="app" id="app">
 
     <header class="app-header">
-      <div class="brand">
-        <span aria-hidden="true">⚡</span>
-        <h1> Task Master </h1>
+      <div class="header-left">
+        <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+          <i class="fas fa-bars"></i>
+        </button>
+        <h2 class="page-title">Dashboard</h2>
       </div>
-      <button class="icon-btn" id="themeBtn" aria-label="Toggle light/dark mode">🌙</button>
+      <div class="header-right">
+        <div class="search-header">
+          <i class="fas fa-search"></i>
+          <input type="search" id="searchInput" placeholder="Search tasks..." aria-label="Search tasks" />
+        </div>
+      </div>
     </header>
 
     <!-- Stats -->
@@ -51,15 +137,15 @@
         ></textarea>
         <div class="form-row">
           <select id="taskPriority" aria-label="Priority">
-            <option value="low">🟢 Low </option>
-            <option value="medium" selected>🟡 Medium </option>
-            <option value="high">🔴 High </option>
+            <option value="low">Low Priority</option>
+            <option value="medium" selected>Medium Priority</option>
+            <option value="high">High Priority</option>
           </select>
           <select id="taskCategory" aria-label="Category">
-            <option value="general">📁 General</option>
-            <option value="work">💼 Work</option>
-            <option value="study">📚 Study</option>
-            <option value="personal">👤 Personal</option>
+            <option value="general">General</option>
+            <option value="work">Work</option>
+            <option value="study">Study</option>
+            <option value="personal">Personal</option>
           </select>
           <input type="date" id="taskDue" aria-label="Due date" />
           <button type="submit" class="btn-primary" id="submitBtn">Add Task</button>
@@ -67,18 +153,24 @@
       </div>
     </form>
 
-    <!-- Toolbar: search + filters -->
+    <!-- Toolbar: filters -->
     <div class="toolbar">
-      <div class="search-wrap">
-        <span aria-hidden="true">🔍</span>
-        <input type="search" id="searchInput" placeholder="Search tasks..." aria-label="Search tasks" />
-      </div>
       <div class="filter-group" role="group" aria-label="Filter tasks">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="active">Active</button>
-        <button class="filter-btn" data-filter="completed">Done</button>
+        <button class="filter-btn active" data-filter="all">
+          <i class="fas fa-layer-group"></i>
+          <span>All</span>
+        </button>
+        <button class="filter-btn" data-filter="active">
+          <i class="fas fa-circle-check"></i>
+          <span>Active</span>
+        </button>
+        <button class="filter-btn" data-filter="completed">
+          <i class="fas fa-circle-check"></i>
+          <span>Done</span>
+        </button>
       </div>
       <div class="sort-wrap">
+        <i class="fas fa-sort"></i>
         <select id="sortSelect" aria-label="Sort tasks">
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
@@ -86,15 +178,21 @@
           <option value="due">By due date</option>
         </select>
       </div>
-      <button class="btn-danger-sm" id="clearDone" aria-label="Clear all completed tasks">Clear Done</button>
+      <button class="btn-danger-sm" id="clearDone" aria-label="Clear all completed tasks">
+        <i class="fas fa-trash-alt"></i>
+        <span>Clear Done</span>
+      </button>
     </div>
 
     <!-- Task list -->
     <main>
       <ul class="task-list" id="taskList" role="list" aria-label="Task list" aria-live="polite"></ul>
-      <div class="empty" id="emptyState" hidden>
-        <span aria-hidden="true">📭</span>
-        <p>No tasks found. Add one above!</p>
+      <div class="empty" id="emptyState" style="display: flex;">
+        <div class="empty-icon">
+          <i class="fas fa-inbox"></i>
+        </div>
+        <p class="empty-title">No tasks found</p>
+        <p class="empty-subtitle">Add a new task above to get started</p>
       </div>
     </main>
 
@@ -105,7 +203,9 @@
     <div class="modal">
       <div class="modal-header">
         <h2 id="modalTitle">Edit Task</h2>
-        <button class="icon-btn" id="modalClose" aria-label="Close edit dialog">✕</button>
+        <button class="icon-btn" id="modalClose" aria-label="Close edit dialog">
+          <i class="fas fa-times"></i>
+        </button>
       </div>
       <form id="editForm" aria-label="Edit task form">
         <div class="form-group">
@@ -120,18 +220,18 @@
           <div class="form-group">
             <label for="editPriority">Priority</label>
             <select id="editPriority">
-              <option value="low">🟢 Low </option>
-              <option value="medium">🟡 Medium </option>
-              <option value="high">🔴 High </option>
+              <option value="low">Low Priority</option>
+              <option value="medium">Medium Priority</option>
+              <option value="high">High Priority</option>
             </select>
           </div>
           <div class="form-group">
             <label for="editCategory">Category</label>
             <select id="editCategory">
-              <option value="general">📁 General</option>
-              <option value="work">💼 Work</option>
-              <option value="study">📚 Study</option>
-              <option value="personal">👤 Personal</option>
+              <option value="general">General</option>
+              <option value="work">Work</option>
+              <option value="study">Study</option>
+              <option value="personal">Personal</option>
             </select>
           </div>
           <div class="form-group">

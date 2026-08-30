@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JavaScript Diagnostic</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #080d1a;
+      color: #fff;
+    }
+    .test-box {
+      background: #141e2e;
+      border: 2px solid #00f0a0;
+      border-radius: 10px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .pass { color: #00f0a0; }
+    .fail { color: #ff6060; }
+    .warn { color: #fbbf24; }
+    button {
+      background: #00f0a0;
+      color: #000;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 700;
+      margin: 5px;
+    }
+    button:hover {
+      opacity: 0.8;
+    }
+    input {
+      background: #0f1624;
+      border: 2px solid #00f0a0;
+      color: #fff;
+      padding: 10px;
+      border-radius: 6px;
+      width: 300px;
+      margin: 5px;
+    }
+    h1 { color: #00f0a0; }
+    h2 { color: #00c8f0; }
+    code {
+      background: #000;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #00f0a0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔧 JavaScript Diagnostic Tool</h1>
+  
+  <noscript>
+    <div class="test-box" style="border-color: #ff6060;">
+      <h2 class="fail">❌ JavaScript is DISABLED</h2>
+      <p>Please enable JavaScript in your browser settings to use this application.</p>
+    </div>
+  </noscript>
+  
+  <div class="test-box">
+    <h2>Test 1: JavaScript Execution</h2>
+    <p id="test1" class="warn">⏳ Waiting...</p>
+  </div>
+  
+  <div class="test-box">
+    <h2>Test 2: DOM Manipulation</h2>
+    <p id="test2" class="warn">⏳ Waiting...</p>
+    <button id="btn1">Click Me!</button>
+  </div>
+  
+  <div class="test-box">
+    <h2>Test 3: Event Listeners</h2>
+    <p id="test3" class="warn">⏳ Waiting... Click the button above</p>
+  </div>
+  
+  <div class="test-box">
+    <h2>Test 4: LocalStorage</h2>
+    <p id="test4" class="warn">⏳ Testing...</p>
+  </div>
+  
+  <div class="test-box">
+    <h2>Test 5: Form Submission</h2>
+    <form id="testForm">
+      <input type="text" id="testInput" placeholder="Type something..." />
+      <button type="submit">Submit</button>
+    </form>
+    <p id="test5" class="warn">⏳ Waiting... Submit the form</p>
+  </div>
+  
+  <div class="test-box">
+    <h2>Test 6: Auth.js Loading</h2>
+    <p id="test6" class="warn">⏳ Checking...</p>
+    <button id="checkAuth">Check Auth Script</button>
+  </div>
+  
+  <div class="test-box">
+    <h2>Quick Actions</h2>
+    <button onclick="location.href='login.html'">Go to Login</button>
+    <button onclick="location.href='test.html'">Go to Test Page</button>
+    <button onclick="localStorage.clear(); alert('LocalStorage cleared!')">Clear Storage</button>
+  </div>
+
+  <script>
+    console.log('Diagnostic script started');
+    
+    // Test 1: Basic JavaScript
+    document.getElementById('test1').innerHTML = '<span class="pass">✅ JavaScript is WORKING!</span>';
+    document.getElementById('test1').className = 'pass';
+    
+    // Test 2: DOM Ready
+    window.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('test2').innerHTML = '<span class="pass">✅ DOM is ready and manipulatable!</span>';
+      document.getElementById('test2').className = 'pass';
+    });
+    
+    // Test 3: Click Events
+    document.getElementById('btn1').addEventListener('click', function() {
+      document.getElementById('test3').innerHTML = '<span class="pass">✅ Click events are working!</span>';
+      document.getElementById('test3').className = 'pass';
+      this.textContent = '✅ Button Clicked!';
+      this.style.background = '#00c8f0';
+    });
+    
+    // Test 4: LocalStorage
+    try {
+      localStorage.setItem('diagnostic_test', 'success');
+      const val = localStorage.getItem('diagnostic_test');
+      localStorage.removeItem('diagnostic_test');
+      
+      if (val === 'success') {
+        document.getElementById('test4').innerHTML = '<span class="pass">✅ LocalStorage is working!</span>';
+        document.getElementById('test4').className = 'pass';
+      } else {
+        throw new Error('LocalStorage read/write failed');
+      }
+    } catch (e) {
+      document.getElementById('test4').innerHTML = '<span class="fail">❌ LocalStorage error: ' + e.message + '</span>';
+      document.getElementById('test4').className = 'fail';
+    }
+    
+    // Test 5: Form Submission
+    document.getElementById('testForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const value = document.getElementById('testInput').value;
+      document.getElementById('test5').innerHTML = '<span class="pass">✅ Form submission prevented! You typed: "' + value + '"</span>';
+      document.getElementById('test5').className = 'pass';
+    });
+    
+    // Test 6: Check if auth.js would load
+    document.getElementById('checkAuth').addEventListener('click', function() {
+      fetch('auth.js')
+        .then(response => {
+          if (response.ok) {
+            document.getElementById('test6').innerHTML = '<span class="pass">✅ auth.js file exists and is accessible!</span>';
+            document.getElementById('test6').className = 'pass';
+          } else {
+            throw new Error('File not found');
+          }
+        })
+        .catch(error => {
+          document.getElementById('test6').innerHTML = '<span class="fail">❌ auth.js not accessible: ' + error.message + '</span>';
+          document.getElementById('test6').className = 'fail';
+        });
+    });
+    
+    console.log('All diagnostic tests initialized');
+  </script>
+</body>
+</html>

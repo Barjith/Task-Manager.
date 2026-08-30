@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analytics - TaskMaster</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .stat-box {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 1rem 0;
+    }
+    .stat-box h3 {
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+    .progress-bar {
+      background: var(--bg-alt);
+      height: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    .progress-fill {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <h2 class="page-title"><i class="fas fa-chart-line"></i> Analytics</h2>
+      <button onclick="location.href='index.html'" class="btn-primary">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+      </button>
+    </header>
+
+    <div class="analytics-grid" id="analytics">
+      <div class="stat-box">
+        <h3><i class="fas fa-tasks"></i> Total Tasks</h3>
+        <div style="font-size: 3rem; font-weight: bold; color: var(--accent);" id="totalTasks">0</div>
+      </div>
+      
+      <div class="stat-box">
+        <h3><i class="fas fa-check-circle"></i> Completed</h3>
+        <div style="font-size: 3rem; font-weight: bold; color: var(--success);" id="completedTasks">0</div>
+      </div>
+      
+      <div class="stat-box">
+        <h3><i class="fas fa-clock"></i> In Progress</h3>
+        <div style="font-size: 3rem; font-weight: bold; color: var(--warn);" id="activeTasks">0</div>
+      </div>
+      
+      <div class="stat-box">
+        <h3><i class="fas fa-percentage"></i> Completion Rate</h3>
+        <div style="font-size: 3rem; font-weight: bold; color: var(--accent2);" id="completionRate">0%</div>
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <h3><i class="fas fa-chart-bar"></i> Progress Overview</h3>
+      <div style="margin: 1rem 0;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span>Completion Progress</span>
+          <span id="progressText">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <h3><i class="fas fa-layer-group"></i> Tasks by Category</h3>
+      <div id="categoryStats"></div>
+    </div>
+
+    <div class="stat-box">
+      <h3><i class="fas fa-fire"></i> Tasks by Priority</h3>
+      <div id="priorityStats"></div>
+    </div>
+  </div>
+
+  <script>
+    console.log('ANALYTICS LOADED');
+    
+    // Load tasks
+    var tasks = [];
+    try {
+      tasks = JSON.parse(localStorage.getItem('taskmaster_tasks') || '[]');
+    } catch (e) {
+      console.error('Error loading tasks:', e);
+    }
+    
+    console.log('Loaded', tasks.length, 'tasks');
+    
+    // Calculate stats
+    var total = tasks.length;
+    var completed = tasks.filter(function(t) { return t.done; }).length;
+    var active = total - completed;
+    var completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+    
+    // Update display
+    document.getElementById('totalTasks').textContent = total;
+    document.getElementById('completedTasks').textContent = completed;
+    document.getElementById('activeTasks').textContent = active;
+    document.getElementById('completionRate').textContent = completionRate + '%';
+    document.getElementById('progressText').textContent = completionRate + '%';
+    document.getElementById('progressBar').style.width = completionRate + '%';
+    
+    // Category stats
+    var categories = {
+      work: 0,
+      study: 0,
+      personal: 0,
+      general: 0
+    };
+    
+    tasks.forEach(function(task) {
+      if (categories[task.category] !== undefined) {
+        categories[task.category]++;
+      }
+    });
+    
+    var categoryHTML = '';
+    for (var cat in categories) {
+      var count = categories[cat];
+      var percent = total > 0 ? Math.round((count / total) * 100) : 0;
+      categoryHTML += '<div style="margin: 10px 0;">';
+      categoryHTML += '<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">';
+      categoryHTML += '<span>' + cat.charAt(0).toUpperCase() + cat.slice(1) + '</span>';
+      categoryHTML += '<span>' + count + ' (' + percent + '%)</span>';
+      categoryHTML += '</div>';
+      categoryHTML += '<div class="progress-bar"><div class="progress-fill" style="width: ' + percent + '%"></div></div>';
+      categoryHTML += '</div>';
+    }
+    document.getElementById('categoryStats').innerHTML = categoryHTML || '<p style="color: var(--muted);">No category data available</p>';
+    
+    // Priority stats
+    var priorities = {
+      high: 0,
+      medium: 0,
+      low: 0
+    };
+    
+    tasks.forEach(function(task) {
+      if (priorities[task.priority] !== undefined) {
+        priorities[task.priority]++;
+      }
+    });
+    
+    var priorityHTML = '';
+    for (var pri in priorities) {
+      var count = priorities[pri];
+      var percent = total > 0 ? Math.round((count / total) * 100) : 0;
+      priorityHTML += '<div style="margin: 10px 0;">';
+      priorityHTML += '<div style="display: flex; justify-content: space-between; margin-bottom: 5px;">';
+      priorityHTML += '<span>' + pri.charAt(0).toUpperCase() + pri.slice(1) + ' Priority</span>';
+      priorityHTML += '<span>' + count + ' (' + percent + '%)</span>';
+      priorityHTML += '</div>';
+      priorityHTML += '<div class="progress-bar"><div class="progress-fill" style="width: ' + percent + '%"></div></div>';
+      priorityHTML += '</div>';
+    }
+    document.getElementById('priorityStats').innerHTML = priorityHTML || '<p style="color: var(--muted);">No priority data available</p>';
+    
+    console.log('Analytics rendered!');
+  </script>
+</body>
+</html>
