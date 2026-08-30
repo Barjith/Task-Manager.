@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Category Tasks - TaskMaster</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      justify-content: center;
+      background: #fafafa;
+    }
+    
+    .app {
+      margin-left: 0 !important;
+      margin-right: 0 !important;
+      max-width: 1200px;
+      padding: 2rem 3rem;
+    }
+    
+    .app-header {
+      margin-bottom: 1.5rem;
+    }
+    
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .category-icon {
+      width: 48px;
+      height: 48px;
+      background: #f3f4f6;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    
+    .stat-box {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 2rem;
+      margin: 1rem 0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    }
+    
+    .stat-box h3 {
+      color: #111827;
+      margin-bottom: 1rem;
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+    
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    
+    .stat-card {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-value {
+      font-size: 3rem;
+      font-weight: bold;
+      color: #111827;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 600;
+    }
+    
+    .task-list-simple {
+      margin-top: 1rem;
+    }
+    
+    .task-simple-item {
+      padding: 1rem;
+      border-bottom: 1px solid #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.2s;
+    }
+    
+    .task-simple-item:hover {
+      background: #f9fafb;
+    }
+    
+    .task-simple-item:last-child {
+      border-bottom: none;
+    }
+    
+    .task-simple-content {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+    }
+    
+    .task-simple-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #d1d5db;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .task-simple-checkbox:checked {
+      background: #000000;
+      border-color: #000000;
+    }
+    
+    .task-simple-title {
+      font-weight: 500;
+      color: #111827;
+    }
+    
+    .task-simple-meta {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      font-size: 0.75rem;
+    }
+    
+    .task-simple-badge {
+      padding: 0.125rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .badge-high {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    
+    .badge-medium {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    
+    .badge-low {
+      background: #dcfce7;
+      color: #166534;
+    }
+    
+    .progress-bar {
+      background: #f3f4f6;
+      height: 20px;
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    
+    .progress-fill {
+      background: #000000;
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+    
+    @media (max-width: 768px) {
+      .app {
+        padding: 1.5rem;
+      }
+      
+      .analytics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <button onclick="location.href='index.html'" class="btn-primary">
+          <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </button>
+        <h2 class="page-title">
+          <div class="category-icon" id="categoryIcon">
+            <i class="fas fa-folder"></i>
+          </div>
+          <span id="categoryTitle">Category</span>
+        </h2>
+      </div>
+    </header>
+
+    <div class="analytics-grid">
+      <div class="stat-card">
+        <h3><i class="fas fa-tasks"></i> Total Tasks</h3>
+        <div class="stat-value" id="statTotal">0</div>
+      </div>
+      
+      <div class="stat-card">
+        <h3><i class="fas fa-clock"></i> Active</h3>
+        <div class="stat-value" style="color: #f59e0b;" id="statActive">0</div>
+      </div>
+      
+      <div class="stat-card">
+        <h3><i class="fas fa-check-circle"></i> Completed</h3>
+        <div class="stat-value" style="color: #16a34a;" id="statCompleted">0</div>
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <h3><i class="fas fa-chart-bar"></i> Completion Progress</h3>
+      <div style="margin: 1rem 0;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+          <span>Progress</span>
+          <span id="progressText">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressBar" style="width: 0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-box">
+      <h3><i class="fas fa-list"></i> All <span id="categoryName">Category</span> Tasks</h3>
+      <div class="task-list-simple" id="taskList"></div>
+      <div id="emptyState" style="display: none; text-align: center; padding: 3rem; color: #9ca3af;">
+        <i class="fas fa-inbox" style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+        <p style="font-size: 1.125rem; font-weight: 600; color: #6b7280;">No tasks in this category</p>
+        <p style="font-size: 0.875rem;">Create a new task from the dashboard</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    console.log('CATEGORY PAGE LOADED');
+    
+    // Check if user is logged in
+    const currentUser = JSON.parse(localStorage.getItem('tm_user') || 'null');
+    if (!currentUser) {
+      window.location.href = 'login.html';
+    }
+    
+    // Get category from URL parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const category = urlParams.get('category') || 'general';
+    
+    // Category configurations
+    const categoryConfig = {
+      work: {
+        icon: 'fa-briefcase',
+        title: 'Work',
+        color: '#3b82f6'
+      },
+      study: {
+        icon: 'fa-graduation-cap',
+        title: 'Study',
+        color: '#8b5cf6'
+      },
+      personal: {
+        icon: 'fa-user',
+        title: 'Personal',
+        color: '#ec4899'
+      },
+      general: {
+        icon: 'fa-folder',
+        title: 'General',
+        color: '#6b7280'
+      }
+    };
+    
+    const config = categoryConfig[category] || categoryConfig.general;
+    
+    // Set category info
+    document.getElementById('categoryTitle').textContent = config.title;
+    document.getElementById('categoryName').textContent = config.title;
+    document.getElementById('categoryIcon').innerHTML = '<i class="fas ' + config.icon + '"></i>';
+    document.getElementById('categoryIcon').style.background = config.color + '20';
+    document.getElementById('categoryIcon').style.color = config.color;
+    document.title = config.title + ' - TaskMaster';
+    
+    // Load tasks
+    var tasks = [];
+    try {
+      tasks = JSON.parse(localStorage.getItem('taskmaster_tasks') || '[]');
+    } catch (e) {
+      console.error('Error loading tasks:', e);
+    }
+    
+    // Filter by category
+    var categoryTasks = tasks.filter(function(task) {
+      return task.category === category;
+    });
+    
+    // Calculate stats
+    var total = categoryTasks.length;
+    var active = categoryTasks.filter(function(t) { return !t.done; }).length;
+    var completed = categoryTasks.filter(function(t) { return t.done; }).length;
+    var completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+    
+    // Update stats
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statActive').textContent = active;
+    document.getElementById('statCompleted').textContent = completed;
+    document.getElementById('progressText').textContent = completionRate + '%';
+    document.getElementById('progressBar').style.width = completionRate + '%';
+    
+    // Render tasks
+    const taskList = document.getElementById('taskList');
+    const emptyState = document.getElementById('emptyState');
+    
+    if (categoryTasks.length === 0) {
+      taskList.style.display = 'none';
+      emptyState.style.display = 'block';
+    } else {
+      taskList.style.display = 'block';
+      emptyState.style.display = 'none';
+      
+      // Sort by newest first
+      categoryTasks.sort(function(a, b) {
+        return b.createdAt - a.createdAt;
+      });
+      
+      categoryTasks.forEach(function(task) {
+        var item = document.createElement('div');
+        item.className = 'task-simple-item';
+        
+        var priorityClass = 'badge-' + task.priority;
+        var statusBadge = task.done ? '<span class="task-simple-badge" style="background: #dcfce7; color: #166534;">✓ Done</span>' : '';
+        
+        item.innerHTML = 
+          '<div class="task-simple-content">' +
+            '<input type="checkbox" class="task-simple-checkbox" data-id="' + task.id + '" ' + (task.done ? 'checked' : '') + '>' +
+            '<span class="task-simple-title" style="' + (task.done ? 'text-decoration: line-through; color: #9ca3af;' : '') + '">' + task.title + '</span>' +
+          '</div>' +
+          '<div class="task-simple-meta">' +
+            '<span class="task-simple-badge ' + priorityClass + '">' + task.priority + '</span>' +
+            statusBadge +
+            (task.due ? '<span style="color: #6b7280;"><i class="fas fa-calendar"></i> ' + task.due + '</span>' : '') +
+          '</div>';
+        
+        taskList.appendChild(item);
+      });
+      
+      // Attach checkbox listeners
+      document.querySelectorAll('.task-simple-checkbox').forEach(function(cb) {
+        cb.onclick = function() {
+          var id = cb.getAttribute('data-id');
+          var task = tasks.find(function(t) { return t.id === id; });
+          if (task) {
+            task.done = !task.done;
+            localStorage.setItem('taskmaster_tasks', JSON.stringify(tasks));
+            location.reload();
+          }
+        };
+      });
+    }
+    
+    console.log('Category page initialized!');
+  </script>
+</body>
+</html>

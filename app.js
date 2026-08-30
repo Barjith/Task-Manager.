@@ -64,7 +64,7 @@ window.onload = function() {
   
   // Theme toggle
   if (themeBtn) {
-    const savedTheme = localStorage.getItem('tm_theme') || 'dark';
+    const savedTheme = localStorage.getItem('tm_theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
     themeBtn.innerHTML = savedTheme === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
     
@@ -301,27 +301,6 @@ window.onload = function() {
         document.querySelector('.page-title').textContent = 'Analytics';
         alert('Analytics coming soon! This will show statistics and charts about your tasks.');
       }
-    };
-  });
-  
-  // Category navigation
-  document.querySelectorAll('.nav-item[data-category]').forEach(function(item) {
-    item.onclick = function(e) {
-      e.preventDefault();
-      var category = item.getAttribute('data-category');
-      console.log('Category clicked:', category);
-      
-      // Filter by category
-      filter = 'all';
-      
-      // Update search to filter by category
-      var filtered = tasks.filter(function(task) {
-        return task.category === category;
-      });
-      
-      document.querySelector('.page-title').textContent = category.charAt(0).toUpperCase() + category.slice(1) + ' Tasks';
-      
-      alert('Filtering by ' + category + ' category. Found ' + filtered.length + ' tasks.\n\nNote: Full category filtering will be implemented next!');
     };
   });
   
